@@ -1,0 +1,49 @@
+// calimero_context_config_icp.did
+
+type RoomType = variant {
+   Chat;
+   Voice;
+};
+
+type UserProfile = record {
+    username: text;
+    wallet_address: text;
+};
+
+type Room = record {
+    name: text;
+    room_type: RoomType;
+    password_hash: text;
+    messages: vec Message;
+    users: vec text;
+    creator: text;
+};
+
+type Message = record {
+    sender: text;
+    content: text;
+    timestamp: nat64;
+};
+
+type Result = variant {
+   Ok;
+   Err: text;
+};
+
+type ICSigned = record {
+   signature: blob;
+   _phantom: null;
+   payload: blob;
+};
+
+service : (principal) -> {
+   get_user_profile : (text) -> (opt UserProfile) query;
+   register_user : (text, text) -> (Result);
+   get_username : (text) -> (opt text) query;
+   get_wallet_address : (text) -> (opt text) query;
+
+   get_room_info : (text) -> (opt Room) query;
+   get_room_messages : (text, text) -> (vec Message) query;
+   get_room_users : (text) -> (vec text) query;
+   list_rooms : () -> (vec text) query;
+};

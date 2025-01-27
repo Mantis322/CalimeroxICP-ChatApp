@@ -1,0 +1,65 @@
+// calimero_context_proxy_icp.did
+
+type Event = variant {
+    RoomCreated: record { name: text };
+    UserJoinedRoom: record { room: text; user: text };
+    MessageSent: record { room: text; sender: text; content: text };
+    RoomDeleted: record { name: text };
+    UserRegistered: record { username: text; wallet_address: text };
+    SignalingMessage: record { room: text; sender: text; receiver: text; content: text };
+};
+
+type RoomType = variant {
+    Chat;
+    Voice;
+};
+
+type Message = record {
+    sender: text;
+    content: text;
+    timestamp: nat64;
+};
+
+type Room = record {
+    name: text;
+    room_type: RoomType;
+    password_hash: text;
+    messages: vec Message;
+    users: vec text;
+    creator: text;
+};
+
+type UserProfile = record {
+    username: text;
+    wallet_address: text;
+};
+
+service : (blob, principal) -> {
+    register_user: (text, text) -> (bool);
+    get_username: (text) -> (opt text) query;
+    get_wallet_address: (text) -> (opt text) query;
+    create_room: (text, text, text, RoomType) -> (bool);
+    join_room: (text, text, text) -> (bool);
+    send_message: (text, text, text) -> (bool);
+    send_signaling: (text, text, text, text) -> (bool);
+    get_room_messages: (text, text) -> (vec record { text; text; nat64 }) query;
+    get_room_users: (text) -> (vec text) query;
+    list_rooms: () -> (vec text) query;
+    leave_room: (text, text) -> (bool);
+    delete_room: (text, text) -> (bool);
+    get_room_info: (text) -> (opt record { text; RoomType; text }) query;
+    mutate: (ICSigned) -> (Result);
+};
+
+// calimero_context_config_icp.did güncelleme gerekiyor
+type ChatState = record {
+    rooms: vec record { text; Room };
+    users: vec record { text; UserProfile };
+    usernames: vec record { text; text };
+};
+
+service : (principal) -> {
+    init: () -> (ChatState);
+    get_state: () -> (ChatState) query;
+    update_state: (ChatState) -> ();
+};
