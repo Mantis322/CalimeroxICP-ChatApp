@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+:root,
+html {
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+  color: #ffffff;
+  background-color: #111111;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+  font-variation-settings: 'slnt' 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: never;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.modal-content {
+  background-color: transparent !important;
+}
+
+@keyframes move {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-2000px);
+  }
+}
+
+.stars {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  background: transparent;
+  box-shadow:
+  144px 451px #fff,
+  82px 314px #fff,
+  99px 568px #fff,
+  126px 272px #fff,
+  194px 512px #fff,
+  263px 562px #fff,
+  245px 162px #fff,
+  77px 354px #fff,
+  235px 372px #fff,
+  159px 149px #fff,
+  1744px 1051px #fff,
+  582px 714px #fff,
+  399px 1168px #fff,
+  1126px 472px #fff,
+  1094px 312px #fff,
+  1663px 562px #fff,
+  1245px 162px #fff,
+  277px 354px #fff,
+  1635px 372px #fff,
+  1459px 149px #fff;
+  animation: move 100s linear infinite;
+}
+
+.stars2 {
+  position: fixed;
+  width: 2px;
+  height: 2px;
+  background: transparent;
+  box-shadow:
+  44px 252px #fff,
+  178px 456px #fff,
+  254px 532px #fff,
+  105px 448px #fff,
+  179px 147px #fff,
+  146px 231px #fff,
+  173px 593px #fff,
+  1344px 652px #fff,
+  878px 456px #fff,
+  1754px 532px #fff,
+  1405px 848px #fff,
+  1779px 147px #fff,
+  1246px 231px #fff,
+  1673px 593px #fff,
+  1337px 141px #fff,
+  1778px 260px #fff;
+  animation: move 150s linear infinite;
+}
+
+.stars3 {
+  position: fixed;
+  width: 3px;
+  height: 3px;
+  background: transparent;
+  box-shadow:
+  119px 348px #fff,
+  145px 469px #fff,
+  97px 163px #fff,
+  156px 472px #fff,
+  204px 312px #fff,
+  1819px 148px #fff,
+  1645px 469px #fff,
+  1397px 163px #fff,
+  1156px 472px #fff,
+  1004px 312px #fff,
+  1623px 526px #fff,
+  1205px 162px #fff;
+  animation: move 200s linear infinite;
+}
