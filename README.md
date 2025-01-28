@@ -1,5 +1,7 @@
 # 🌟 DecentralChat - Next Generation Web3 Communication Platform  
 
+![Logo](https://github.com/Mantis322/CalimeroxICP-ChatApp/blob/main/Chat_App/app/Logo.png)
+
 ## 🚀 Overview  
 DecentralChat is a revolutionary Web3 communication platform built on the Internet Computer Protocol (ICP) network, leveraging the power of Calimero SDK. It combines traditional chat functionality with blockchain capabilities, offering a secure, decentralized, and feature-rich communication experience.  
 
