@@ -71,10 +71,10 @@ DecentralChat is a revolutionary Web3 communication platform built on the Intern
 
 - [x] Basic chat functionality  
 - [x] ICP wallet integration  
-- [x] Real-time balance tracking  
+- [x] Real-time balance tracking
+- [x] End-to-end encryption 
 - [ ] Direct ICP transfers  
-- [ ] Voice room implementation  
-- [ ] End-to-end encryption  
+- [ ] Voice room implementation    
 - [ ] File sharing  
 
 ---
