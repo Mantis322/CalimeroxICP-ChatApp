@@ -78,6 +78,35 @@ DecentralChat is a revolutionary Web3 communication platform built on the Intern
 - [ ] File sharing  
 
 ---
+## 🚀 Getting Started
+
+*You can see the detailed installation steps via this [link](https://calimero-network.github.io/tutorials/awesome-projects/building-with-icp).*
+
+To get started with PrivatePrivacy, follow these steps:
+Make sure you have these installed and running on your system before you start
+- [CalimeroSDK Starknet Node](https://calimero-network.github.io/getting-started/setup)
+- [Merod](https://calimero-network.github.io/developer-tools/CLI/merod)
+- [Meroctl](https://calimero-network.github.io/developer-tools/CLI/meroctl)
+
+-  ```git clone https://github.com/Mantis322/CalimeroxICP-ChatApp.git```
+- ```cd CalimeroxICP-ChatAp```
+- ```cd icp-devnet```
+- ```./deploy_devnet_fresh.sh```
+- ```cd Chat_app```
+- ```./build.sh```
+- ```merod --node-name node1 init --server-port 2428 --swarm-port 2528```
+- ```merod --node-name node1 run```
+- ```application install file <PATH_TO_blockchain.wasm_FILE>```
+- ```context create <APPLICATION_ID> --protocol icp```
+- ```http://localhost:2428/admin-api/contexts/CONTEXT_ID/proxy-contract```
+- ```dfx identity use initial```
+- ```dfx canister call <LEDGER_CONTRACT_ID> icrc1_transfer '(record {to = record {owner = principal "<PROXY_CONTRACT_ID>";subaccount = null;};amount = 1_000_000_000;fee = null;memo = null;from_subaccount = null;created_at_time = null;})'```
+- ```dfx canister call bd3sg-teaaa-aaaaa-qaaba-cai icrc1_balance_of '(record {owner = principal "<PROXY_CONTRACT_ID>";subaccount = null;})'```
+- ```cd logic```
+- ```npm install```
+- ```npm run dev```
+
+---
 
 ## 📄 License  
 This project is licensed under the **MIT License** - see the LICENSE file for details.  
