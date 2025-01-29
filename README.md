@@ -89,7 +89,7 @@ Make sure you have these installed and running on your system before you start
 - [Meroctl](https://calimero-network.github.io/developer-tools/CLI/meroctl)
 
 -  ```git clone https://github.com/Mantis322/CalimeroxICP-ChatApp.git```
-- ```cd CalimeroxICP-ChatAp```
+- ```cd CalimeroxICP-ChatApp```
 - ```cd icp-devnet```
 - ```./deploy_devnet_fresh.sh```
 - ```cd Chat_app```
