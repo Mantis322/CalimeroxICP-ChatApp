@@ -84,7 +84,7 @@ DecentralChat is a revolutionary Web3 communication platform built on the Intern
 
 To get started with PrivatePrivacy, follow these steps:
 Make sure you have these installed and running on your system before you start
-- [CalimeroSDK Starknet Node](https://calimero-network.github.io/getting-started/setup)
+- [CalimeroSDK Node](https://calimero-network.github.io/getting-started/setup)
 - [Merod](https://calimero-network.github.io/developer-tools/CLI/merod)
 - [Meroctl](https://calimero-network.github.io/developer-tools/CLI/meroctl)
 
