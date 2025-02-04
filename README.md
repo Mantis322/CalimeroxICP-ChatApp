@@ -11,7 +11,18 @@ DecentralChat is a revolutionary Web3 communication platform built on the Intern
 - 🎙️ **Voice Rooms** with WebRTC integration (*In Development*)  
 - 💰 **ICP Integration** for balance tracking and transfers  
 - 🔒 **Password-Protected Rooms** for enhanced security  
-- 🔄 **Real-time Updates** using WebSocket connections  
+- 🔄 **Real-time Updates** using WebSocket connections
+
+## 📂 IPFS File Sharing  
+
+DecentralChat now supports **IPFS-based file sharing**, allowing users to send files securely and with **time-limited access**. The sender can set an expiration time for the file link, ensuring that once the time has elapsed, the link will no longer be accessible.
+
+### 🔹 How It Works  
+1. Users upload a file via the chat interface.  
+2. The file is stored on the **IPFS network**.  
+3. A unique IPFS link is generated.  
+4. The sender sets an **expiration time** for the file.  
+5. Once the time expires, the file link will be **automatically disabled**.  
 
 ---
 
@@ -72,10 +83,10 @@ DecentralChat is a revolutionary Web3 communication platform built on the Intern
 - [x] Basic chat functionality  
 - [x] ICP wallet integration  
 - [x] Real-time balance tracking
-- [x] End-to-end encryption 
+- [x] End-to-end encryption
+- [x] IPFS File sharing  
 - [ ] Direct ICP transfers  
 - [ ] Voice room implementation    
-- [ ] File sharing  
 
 ---
 ## 🚀 Getting Started
@@ -105,6 +116,7 @@ Make sure you have these installed and running on your system before you start
 - ```cd logic```
 - ```npm install```
 - ```npm run dev```
+*To use the IPFS feature, you must add pinata JWT Token and GATEWAY to the .env file*
 
 ---
 
