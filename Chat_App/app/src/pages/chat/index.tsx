@@ -38,10 +38,10 @@ interface Message {
 }
 
 const MessageContent = ({ message }: { message: Message }) => {
-  // URL'i kontrol et
+
   if (message.content.startsWith('https://') &&
     message.content.includes('mypinata.cloud')) {
-    // Eğer URL bir resim dosyasına aitse
+
     if (message.content.match(/\.(jpg|jpeg|png|gif)($|\?)/i)) {
       return (
         <div className="mt-2">
@@ -53,7 +53,7 @@ const MessageContent = ({ message }: { message: Message }) => {
         </div>
       );
     }
-    // Diğer dosya türleri için link
+
     return (
       <a
         href={message.content}
@@ -66,7 +66,7 @@ const MessageContent = ({ message }: { message: Message }) => {
     );
   }
 
-  // Normal mesaj
+
   return <div>{message.content}</div>;
 };
 
@@ -101,7 +101,6 @@ export default function ChatPage() {
 
       const response = await pinata.upload.file(finalFile);
 
-      // Özel URL oluştur
       const url = await pinata.gateways.createSignedURL({
         cid: response.cid,
         expires: expiresIn,
