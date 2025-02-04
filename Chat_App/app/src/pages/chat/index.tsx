@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, Plus, Send, Trash2, ArrowLeft, Search } from 'lucide-react';
+import { MessageSquare, Plus, Send, Trash2, ArrowLeft, Search, Paperclip } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { RoomType } from '../../api/clientApi';
 import { UsernameModal, PasswordModal, AlertModal } from '../../components/Modals';
@@ -8,6 +8,8 @@ import { SubscriptionsClient } from '@calimero-network/calimero-client';
 import { getWsSubscriptionsClient, LogicApiDataSource } from '../../api/dataSource/LogicApiDataSource';
 import { getContextId } from '../../utils/node';
 import { AuthClient } from '@dfinity/auth-client';
+import { PinataSDK } from "pinata";
+import FileSharing from '../../components/FileSharing';
 import {
   clearAppEndpoint,
   clearJWT,
@@ -18,6 +20,55 @@ import {
 import { clearApplicationId } from '../../utils/storage';
 import { getStorageApplicationId } from '../../utils/node';
 
+
+const pinata = new PinataSDK({
+  pinataJwt: import.meta.env.VITE_PINATA_JWT,
+  pinataGateway: import.meta.env.VITE_PINATA_GATEWAY,
+});
+
+
+
+interface Message {
+  sender: string;
+  content: string;
+  timestamp: number;
+  fileType?: string;
+  fileUrl?: string;
+  fileName?: string;
+}
+
+const MessageContent = ({ message }: { message: Message }) => {
+  // URL'i kontrol et
+  if (message.content.startsWith('https://') &&
+    message.content.includes('mypinata.cloud')) {
+    // Eğer URL bir resim dosyasına aitse
+    if (message.content.match(/\.(jpg|jpeg|png|gif)($|\?)/i)) {
+      return (
+        <div className="mt-2">
+          <img
+            src={message.content}
+            alt="Shared content"
+            className="max-w-[300px] rounded-lg"
+          />
+        </div>
+      );
+    }
+    // Diğer dosya türleri için link
+    return (
+      <a
+        href={message.content}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-400 hover:text-blue-300 underline"
+      >
+        Shared file
+      </a>
+    );
+  }
+
+  // Normal mesaj
+  return <div>{message.content}</div>;
+};
 
 export default function ChatPage() {
   const navigate = useNavigate();
@@ -35,10 +86,36 @@ export default function ChatPage() {
   const [showPasswordError, setShowPasswordError] = useState(false);
   const [showRoomExistsAlert, setShowRoomExistsAlert] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteError, setShowDeleteError] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [roomSearchQuery, setRoomSearchQuery] = useState('');
-  const [showDeleteError, setShowDeleteError] = useState(false);
   const [roomCreator, setRoomCreator] = useState<string>('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileExpiry, setFileExpiry] = useState(30 * 24 * 60 * 60);
+
+
+  const uploadToIPFS = async (file: File, expiresIn: number) => {
+    try {
+      const blob = new Blob([file]);
+      const finalFile = new File([blob], file.name, { type: file.type });
+
+      const response = await pinata.upload.file(finalFile);
+
+      // Özel URL oluştur
+      const url = await pinata.gateways.createSignedURL({
+        cid: response.cid,
+        expires: expiresIn,
+      });
+
+      return {
+        url,
+        cid: response.cid
+      };
+    } catch (error) {
+      console.error("IPFS upload error:", error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -73,37 +150,37 @@ export default function ChatPage() {
   }, [identity]);
 
   useEffect(() => {
-  const observeNodeEvents = async () => {
-    let subscriptionsClient: SubscriptionsClient = getWsSubscriptionsClient();
-    await subscriptionsClient.connect();
-    subscriptionsClient.subscribe([getContextId()]);
-
-    subscriptionsClient?.addCallback(async () => {
-      if (currentRoom) {
-        await loadMessages(currentRoom);
-      }
-    });
-
-    return () => {
-      subscriptionsClient?.disconnect();
-    };
-  };
-
-  observeNodeEvents();
-}, [currentRoom]);
-
-useEffect(() => {
-  const messagesContainer = document.querySelector('.overflow-y-auto');
-  if (messagesContainer) {
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  }
-}, [messages]);
-
-  useEffect(() => {
     if (username) {
       loadRooms();
     }
   }, [username]);
+
+  useEffect(() => {
+    const observeNodeEvents = async () => {
+      let subscriptionsClient: SubscriptionsClient = getWsSubscriptionsClient();
+      await subscriptionsClient.connect();
+      subscriptionsClient.subscribe([getContextId()]);
+
+      subscriptionsClient?.addCallback(async () => {
+        if (currentRoom) {
+          await loadMessages(currentRoom);
+        }
+      });
+
+      return () => {
+        subscriptionsClient?.disconnect();
+      };
+    };
+
+    observeNodeEvents();
+  }, [currentRoom]);
+
+  useEffect(() => {
+    const messagesContainer = document.querySelector('.overflow-y-auto');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  }, [messages]);
 
   async function checkExistingUsername() {
     const result = await new LogicApiDataSource().getUsername({
@@ -117,36 +194,13 @@ useEffect(() => {
     }
   }
 
-  const disconnectWallet = async () => {
-    if (authClient) {
-      await authClient.logout();
-      setIdentity('');
-      setUsername('');
-      navigate('/home');
-    }
-  };
-
-  const logout = () => {
-    clearAppEndpoint();
-    clearJWT();
-    clearApplicationId();
-    setIdentity('');
-    setUsername('');
-    navigate('/auth');
-  };
-
-  const handleJoinRoom = (roomName: string) => {
-    setSelectedRoom(roomName);
-    setShowPasswordModal(true);
-  };
-
   async function loadRooms() {
     const result = await new LogicApiDataSource().listRooms();
     if (result?.error) {
       console.error('Error:', result.error);
       return;
     }
-   
+
     const chatRooms = await Promise.all(
       (result.data ?? []).map(async (roomName) => {
         const roomInfo = await new LogicApiDataSource().getRoomInfo({
@@ -161,16 +215,14 @@ useEffect(() => {
         return null;
       })
     );
-   
+
     setAvailableRooms(
       chatRooms
         .filter(room => room && room.type === RoomType.Chat)
         .map(room => room!.name)
     );
-   }
+  }
 
-
-   
   async function createRoom() {
     if (!newRoomName || !newRoomPassword) return;
 
@@ -247,12 +299,25 @@ useEffect(() => {
   }
 
   async function sendMessage() {
-    if (!newMessage || !currentRoom) return;
+    if ((!newMessage && !selectedFile) || !currentRoom) return;
+
+    let messageContent = newMessage;
+
+
+    if (selectedFile) {
+      try {
+        const ipfsResult = await uploadToIPFS(selectedFile, fileExpiry);
+        messageContent = ipfsResult.url;
+      } catch (error) {
+        console.error("File upload failed:", error);
+        return;
+      }
+    }
 
     const result = await new LogicApiDataSource().sendMessage({
       room_name: currentRoom,
       sender: username,
-      content: newMessage
+      content: messageContent
     });
 
     if (result?.error) {
@@ -261,32 +326,8 @@ useEffect(() => {
     }
 
     setNewMessage('');
+    setSelectedFile(null);
     await loadMessages(currentRoom);
-  }
-
-  async function handleMessage(message: string) {
-    const transferRegex = /^\/send\s+(\d+(?:\.\d+)?)\s+ICP\s+to\s+(\w+)$/i;
-    const match = message.match(transferRegex);
-    
-    if (!match) {
-      await sendMessage();
-      return;
-    }
-  
-    const amount = parseFloat(match[1]);
-    const recipient = match[2];
-  
-    // Önce cüzdan adresini test edelim
-    const response = await new LogicApiDataSource().getWalletAddress({
-      username: recipient
-    });
-    
-    console.log("Wallet address response:", response.data);
-  
-    if (!response.data) {
-      // Kullanıcı bulunamadı hatası göster
-      return;
-    }
   }
 
   async function deleteRoom() {
@@ -297,31 +338,37 @@ useEffect(() => {
 
     if (result?.error) {
       setShowDeleteError(true);
-      setShowDeleteConfirm(false); 
+      setShowDeleteConfirm(false);
       return;
     }
 
     setCurrentRoom('');
     await loadRooms();
-    setShowDeleteConfirm(false); 
+    setShowDeleteConfirm(false);
   }
 
-  useEffect(() => {
-    const observeNodeEvents = async () => {
-      let subscriptionsClient: SubscriptionsClient = getWsSubscriptionsClient();
-      await subscriptionsClient.connect();
-      subscriptionsClient.subscribe([getContextId()]);
+  const disconnectWallet = async () => {
+    if (authClient) {
+      await authClient.logout();
+      setIdentity('');
+      setUsername('');
+      navigate('/home');
+    }
+  };
 
-      subscriptionsClient?.addCallback(() => {
-        if (currentRoom) {
-          loadMessages(currentRoom);
-          loadRooms();
-        }
-      });
-    };
+  const logout = () => {
+    clearAppEndpoint();
+    clearJWT();
+    clearApplicationId();
+    setIdentity('');
+    setUsername('');
+    navigate('/auth');
+  };
 
-    observeNodeEvents();
-  }, [currentRoom]);
+  const handleJoinRoom = (roomName: string) => {
+    setSelectedRoom(roomName);
+    setShowPasswordModal(true);
+  };
 
   const filteredMessages = messages.filter(([sender, content]) =>
     content.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -334,7 +381,6 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
-
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="space-background">
           <div className="stars"></div>
@@ -350,7 +396,7 @@ useEffect(() => {
       />
 
       <div className="container mx-auto max-w-7xl px-4 pt-20">
-        <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center"> {/* items-start yerine items-center kullandık */}
+        <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center">
           <div className="w-full max-w-4xl space-y-8">
             {!currentRoom ? (
               <div className="w-full max-w-md mx-auto space-y-8">
@@ -467,9 +513,9 @@ useEffect(() => {
                           : 'bg-gray-700/50 text-white backdrop-blur-xl'
                           }`}>
                           <div className="font-semibold">{sender}</div>
-                          <div className="mt-1">{content}</div>
+                          <MessageContent message={{ sender, content, timestamp }} />
                           <div className="text-xs opacity-75 mt-2">
-                            {new Date(timestamp).toLocaleTimeString()}
+                            
                           </div>
                         </div>
                       </div>
@@ -478,21 +524,38 @@ useEffect(() => {
                 </div>
 
                 <div className="flex gap-4">
-  <input
-    placeholder="Type a message..."
-    value={newMessage}
-    onChange={e => setNewMessage(e.target.value)}
-    onKeyPress={e => e.key === 'Enter' && handleMessage(newMessage)}
-    className="flex-1 bg-gray-800/30 text-white placeholder-gray-400 px-4 py-3 rounded-xl focus:ring-2 focus:ring-gray-500/50 focus:outline-none backdrop-blur-xl border border-gray-700/50"
-  />
-  <button
-    onClick={() => handleMessage(newMessage)}
-    className="bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 text-white font-medium px-8 rounded-xl transition-all duration-300 flex items-center gap-2"
-  >
-    <Send className="w-4 h-4" />
-    Send
-  </button>
-</div>
+                  <div className="flex-1 flex items-center bg-gray-800/30 rounded-xl backdrop-blur-xl border border-gray-700/50">
+                    <div className="pl-4">
+                      <FileSharing
+                        onFileSelect={(file, expiresIn) => {
+                          setSelectedFile(file);
+                          setFileExpiry(expiresIn);
+                        }}
+                        selectedFile={selectedFile}
+                        onRemoveFile={() => {
+                          setSelectedFile(null);
+                          setFileExpiry(30 * 24 * 60 * 60); // Reset to default
+                        }}
+                      />
+                    </div>
+                    <input
+                      placeholder={selectedFile ? "File will be shared..." : "Type a message..."}
+                      value={newMessage}
+                      onChange={e => setNewMessage(e.target.value)}
+                      onKeyPress={e => e.key === 'Enter' && sendMessage()}
+                      className={`flex-1 bg-transparent text-white placeholder-gray-400 px-4 py-3 focus:outline-none ${selectedFile ? 'cursor-not-allowed opacity-50' : ''
+                        }`}
+                      disabled={selectedFile !== null}
+                    />
+                  </div>
+                  <button
+                    onClick={sendMessage}
+                    className="bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 text-white font-medium px-8 rounded-xl transition-all duration-300 flex items-center gap-2"
+                  >
+                    <Send className="w-4 h-4" />
+                    Send
+                  </button>
+                </div>
               </div>
             )}
           </div>
